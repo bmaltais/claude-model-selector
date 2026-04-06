@@ -47,28 +47,6 @@ claude-model-selector add my-local \
 claude-model-selector select my-local
 ```
 
-```bash
-uv tool install --from . claude-model-selector
-# or
-pip install .
-```
-
-## Quick Start
-
-```bash
-# Initialize configuration storage
-claude-model-selector init
-
-# Add a model configuration
-claude-model-selector add my-local \
-  --base-url http://localhost:8000 \
-  --api-key mykey \
-  --opus-model qwen3.5-35b
-
-# Select a model (automatically starts claude-code)
-claude-model-selector select my-local
-```
-
 ## Usage
 
 ### Command Reference
