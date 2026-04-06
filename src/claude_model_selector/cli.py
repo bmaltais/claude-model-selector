@@ -165,13 +165,13 @@ def list_models_cmd():
 
 @main.command()
 @click.argument("name", required=False)
-@click.option("--base-url", help="API base URL")
-@click.option("--api-key", help="API key")
-@click.option("--auth-token", help="Authentication token")
-@click.option("--opus-model", help="Opus model name")
-@click.option("--sonnet-model", help="Sonnet model name")
-@click.option("--haiku-model", help="Haiku model name")
-@click.option("--description", "-d", help="Model description/name")
+@click.option("--base-url", default=None, help="API base URL")
+@click.option("--api-key", default=None, help="API key")
+@click.option("--auth-token", default=None, help="Authentication token")
+@click.option("--opus-model", default=None, help="Opus model name")
+@click.option("--sonnet-model", default=None, help="Sonnet model name")
+@click.option("--haiku-model", default=None, help="Haiku model name")
+@click.option("--description", "-d", default=None, help="Model description/name")
 @click.option("-i", "--interactive", is_flag=True, help="Run interactive prompts for missing fields")
 def add(name, base_url, api_key, auth_token, opus_model, sonnet_model, haiku_model, description, interactive):
     """Add a new model configuration. Use -i for interactive prompts with sensible defaults."""
@@ -202,7 +202,7 @@ def add(name, base_url, api_key, auth_token, opus_model, sonnet_model, haiku_mod
             return
 
     model = ModelConfig(
-        name=description or name,
+        name=description if description is not None else name,
         base_url=base_url or "",
         api_key=api_key or "",
         auth_token=auth_token or "",

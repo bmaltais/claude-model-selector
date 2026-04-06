@@ -68,7 +68,9 @@ def save_config(config: ConfigFile) -> None:
 def add_model(name: str, model: ModelConfig) -> None:
     """Add or update a model configuration."""
     config = load_config()
-    model.name = name  # Ensure name matches key
+    # Use the key name if no description was set, otherwise keep the description
+    if not model.name or model.name == name:
+        model.name = name
     config.models[name] = model
     save_config(config)
 
