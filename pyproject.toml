@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "claude-model-selector"
+version = "0.1.0"
+description = "Manage Claude Code model configurations and environment variables"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1.0",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+claude-model-selector = "claude_model_selector.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+]
