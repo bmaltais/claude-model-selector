@@ -11,6 +11,9 @@ from .models import ConfigFile, ModelConfig
 DEFAULT_CONFIG_DIR = Path.home() / ".claude" / "model-config"
 DEFAULT_CONFIG_FILE = DEFAULT_CONFIG_DIR / "models.yaml"
 
+# Module-level cache for loaded config
+_config_cache: Optional[ConfigFile] = None
+
 
 def get_config_path() -> Path:
     """Get the configuration file path, respecting env override."""
@@ -27,8 +30,19 @@ def ensure_config_dir() -> Path:
     return config_path.parent
 
 
+def clear_config_cache() -> None:
+    """Clear the configuration cache. Call after save_config()."""
+    global _config_cache
+    _config_cache = None
+
+
 def load_config() -> ConfigFile:
     """Load the configuration file."""
+    global _config_cache
+
+    if _config_cache is not None:
+        return _config_cache
+
     config_path = get_config_path()
     default = ConfigFile()
 
@@ -53,6 +67,7 @@ def load_config() -> ConfigFile:
             haiku_model=model_data.get("haiku_model", ""),
         )
 
+    _config_cache = config
     return config
 
 
@@ -63,6 +78,9 @@ def save_config(config: ConfigFile) -> None:
 
     with open(config_path, "w") as f:
         yaml.dump(config.to_yaml_dict(), f, default_flow_style=False, sort_keys=False)
+
+    # Invalidate cache after save
+    clear_config_cache()
 
 
 def add_model(name: str, model: ModelConfig) -> None:

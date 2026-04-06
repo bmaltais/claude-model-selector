@@ -8,6 +8,9 @@ import click
 
 from .config import list_models, set_active
 
+# Timeout for fzf selection (seconds)
+FZF_TIMEOUT = 30
+
 
 def interactive_select() -> Optional[str]:
     """
@@ -57,7 +60,7 @@ def select_with_fzf(model_names: list[str]) -> Optional[str]:
             input=fzf_input,
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=FZF_TIMEOUT,
         )
 
         if result.returncode != 0:
@@ -80,10 +83,10 @@ def select_with_fzf(model_names: list[str]) -> Optional[str]:
     except FileNotFoundError:
         # fzf not found - fall back to menu
         pass
-
     except Exception as e:
         click.echo(f"Error with fzf: {e}", err=True)
         # Fall back to menu
+        pass
 
     return select_with_menu(model_names)
 

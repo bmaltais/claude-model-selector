@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Optional
 
 import click
 
@@ -304,46 +305,6 @@ def select(name):
     interactive_select()
 
 
-def _run_claude():
-    """Run claude-code with active model environment."""
-    model = get_active_model()
-
-    if not model:
-        click.echo("Error: No active model configured.", err=True)
-        sys.exit(1)
-
-    env_vars = model.to_env_vars()
-    if not env_vars:
-        click.echo("Error: No environment variables set for active model.", err=True)
-        sys.exit(1)
-
-    # Find claude executable
-    claude_exe = shutil.which("claude-code") or shutil.which("claude") or shutil.which("Claude")
-
-    if not claude_exe:
-        click.echo(
-            "Error: Could not find claude-code or claude executable in PATH.",
-            err=True,
-        )
-        click.echo(
-            "Make sure Claude Code is installed and in your PATH.",
-            err=True,
-        )
-        sys.exit(1)
-
-    # Run with environment variables, in current directory
-    env = os.environ.copy()
-    env.update(env_vars)
-
-    try:
-        subprocess.run([claude_exe], env=env, check=True)
-    except KeyboardInterrupt:
-        pass
-    except FileNotFoundError:
-        click.echo(f"Command not found: {claude_exe}", err=True)
-        sys.exit(127)
-
-
 @main.command()
 def show():
     """Show the currently active model configuration."""
@@ -434,8 +395,8 @@ def run(args):
     run_claude(model)
 
 
-def run_claude(model):
-    """Run claude-code with a model's environment."""
+def _run_with_env(model, command: list[str]) -> None:
+    """Run a command with a model's environment variables."""
     env_vars = model.to_env_vars()
     if not env_vars:
         click.echo("Error: No environment variables set for this model.", err=True)
@@ -444,7 +405,23 @@ def run_claude(model):
     env = os.environ.copy()
     env.update(env_vars)
 
-    claude_exe = shutil.which("claude-code") or shutil.which("claude") or shutil.which("Claude")
+    try:
+        subprocess.run(command, env=env, check=True)
+    except FileNotFoundError:
+        click.echo(f"Command not found: {command[0]}", err=True)
+        sys.exit(127)
+    except KeyboardInterrupt:
+        pass
+
+
+def _find_claude_exe() -> Optional[str]:
+    """Find the claude executable in PATH."""
+    return shutil.which("claude-code") or shutil.which("claude") or shutil.which("Claude")
+
+
+def run_claude(model: ModelConfig) -> None:
+    """Run claude-code with a model's environment."""
+    claude_exe = _find_claude_exe()
 
     if not claude_exe:
         click.echo(
@@ -457,33 +434,12 @@ def run_claude(model):
         )
         sys.exit(1)
 
-    try:
-        subprocess.run([claude_exe], env=env, check=True)
-    except KeyboardInterrupt:
-        pass
-    except FileNotFoundError:
-        click.echo(f"Command not found: {claude_exe}", err=True)
-        sys.exit(127)
+    _run_with_env(model, [claude_exe])
 
 
-def run_command(model, command):
+def run_command(model: ModelConfig, command: list[str]) -> None:
     """Run an arbitrary command with a model's environment."""
-    env_vars = model.to_env_vars()
-    if not env_vars:
-        click.echo("Error: No environment variables set for this model.", err=True)
-        sys.exit(1)
-
-    env = os.environ.copy()
-    env.update(env_vars)
-
-    executable = command[0]
-    try:
-        subprocess.run([executable, *command[1:]], env=env, check=True)
-    except FileNotFoundError:
-        click.echo(f"Command not found: {executable}", err=True)
-        sys.exit(127)
-    except KeyboardInterrupt:
-        pass
+    _run_with_env(model, command)
 
 
 @main.command()

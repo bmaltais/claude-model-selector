@@ -17,40 +17,29 @@ class ModelConfig:
     haiku_model: str = ""
 
     def to_env_vars(self) -> dict[str, str]:
-        """Convert to environment variable dict."""
-        env = {}
-        if self.base_url:
-            env["ANTHROPIC_BASE_URL"] = self.base_url
-        if self.api_key:
-            env["ANTHROPIC_API_KEY"] = self.api_key
-        if self.auth_token:
-            env["ANTHROPIC_AUTH_TOKEN"] = self.auth_token
-        if self.opus_model:
-            env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = self.opus_model
-        if self.sonnet_model:
-            env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = self.sonnet_model
-        if self.haiku_model:
-            env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = self.haiku_model
-        return env
+        """Convert to environment variable dict (only non-empty values)."""
+        env = {
+            "ANTHROPIC_BASE_URL": self.base_url,
+            "ANTHROPIC_API_KEY": self.api_key,
+            "ANTHROPIC_AUTH_TOKEN": self.auth_token,
+            "ANTHROPIC_DEFAULT_OPUS_MODEL": self.opus_model,
+            "ANTHROPIC_DEFAULT_SONNET_MODEL": self.sonnet_model,
+            "ANTHROPIC_DEFAULT_HAIKU_MODEL": self.haiku_model,
+        }
+        return {k: v for k, v in env.items() if v}
 
     def to_yaml_dict(self) -> dict:
         """Convert to YAML-serializable dict (only non-empty values)."""
-        data = {}
-        if self.name:
-            data["name"] = self.name
-        if self.base_url:
-            data["base_url"] = self.base_url
-        if self.api_key:
-            data["api_key"] = self.api_key
-        if self.auth_token:
-            data["auth_token"] = self.auth_token
-        if self.opus_model:
-            data["opus_model"] = self.opus_model
-        if self.sonnet_model:
-            data["sonnet_model"] = self.sonnet_model
-        if self.haiku_model:
-            data["haiku_model"] = self.haiku_model
-        return data
+        non_empty = {
+            "name": self.name,
+            "base_url": self.base_url,
+            "api_key": self.api_key,
+            "auth_token": self.auth_token,
+            "opus_model": self.opus_model,
+            "sonnet_model": self.sonnet_model,
+            "haiku_model": self.haiku_model,
+        }
+        return {k: v for k, v in non_empty.items() if v}
 
 
 @dataclass
