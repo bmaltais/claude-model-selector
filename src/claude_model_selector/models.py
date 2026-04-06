@@ -28,6 +28,15 @@ class ModelConfig:
         }
         return {k: v for k, v in env.items() if v}
 
+    @staticmethod
+    def escape_shell_value(value: str) -> str:
+        """Escape a value for use in a shell export command."""
+        if any(c in value for c in " $`\\"):
+            # Use single quotes and escape single quotes within
+            escaped = value.replace("'", "'\\''")
+            return f"'{escaped}'"
+        return f"'{value}'"
+
     def to_yaml_dict(self) -> dict:
         """Convert to YAML-serializable dict (only non-empty values)."""
         non_empty = {

@@ -176,19 +176,12 @@ def list_models_cmd():
 @click.option("-i", "--interactive", is_flag=True, help="Run interactive prompts for missing fields")
 def add(name, base_url, api_key, auth_token, opus_model, sonnet_model, haiku_model, description, interactive):
     """Add a new model configuration. Use -i for interactive prompts with sensible defaults."""
+    # Check if model already exists before prompting for other fields
+    if get_model(name):
+        click.echo(f"Model '{name}' already exists. Use 'edit' to modify it.")
+        return
+
     if interactive:
-        # Prompt for name first if not provided
-        if not name:
-            name = click.prompt("Model name")
-        if not name:
-            click.echo("Error: Model name is required.", err=True)
-            sys.exit(1)
-
-        # Check if model already exists before prompting for other fields
-        if get_model(name):
-            click.echo(f"Model '{name}' already exists. Use 'edit' to modify it.")
-            return
-
         base_url, api_key, auth_token, opus_model, sonnet_model, haiku_model, description = interactive_add_fields(
             name, base_url, api_key, auth_token, opus_model, sonnet_model, haiku_model, description
         )
@@ -197,10 +190,6 @@ def add(name, base_url, api_key, auth_token, opus_model, sonnet_model, haiku_mod
         if not name:
             click.echo("Error: Model name is required. Use 'add <name>' or 'add -i'.", err=True)
             sys.exit(1)
-
-        if get_model(name):
-            click.echo(f"Model '{name}' already exists. Use 'edit' to modify it.")
-            return
 
     model = ModelConfig(
         name=description if description is not None else name,
@@ -235,7 +224,18 @@ def edit(name, base_url, api_key, auth_token, opus_model, sonnet_model, haiku_mo
         ensure_config_dir()
         editor_cmd = os.environ.get("EDITOR", "nano")
         click.echo(f"Opening {config_path} in {editor_cmd}...")
-        subprocess.run([editor_cmd, str(config_path)])
+        try:
+            result = subprocess.run([editor_cmd, str(config_path)])
+            if result.returncode != 0:
+                click.echo(f"Editor exited with code {result.returncode}.", err=True)
+        except FileNotFoundError:
+            fallback = "vi"
+            click.echo(f"Editor '{editor_cmd}' not found, trying '{fallback}'...", err=True)
+            try:
+                subprocess.run([fallback, str(config_path)])
+            except FileNotFoundError:
+                click.echo(f"No editor found. Edit manually: {config_path}", err=True)
+                return
         click.echo("Saved. Restart claude-code to apply changes.")
         return
 
@@ -347,13 +347,7 @@ def export():
         sys.exit(1)
 
     for key, value in env_vars.items():
-        # Handle values with special characters by quoting
-        if any(c in value for c in " $`\\"):
-            # Use single quotes and escape single quotes within
-            escaped = value.replace("'", "'\\''")
-            click.echo(f"export {key}='{escaped}'")
-        else:
-            click.echo(f"export {key}='{value}'")
+        click.echo(f"export {key}={model.escape_shell_value(value)}")
 
 
 @main.command()

@@ -57,15 +57,7 @@ def load_config() -> ConfigFile:
 
     models_data = data.get("models", {})
     for name, model_data in models_data.items():
-        config.models[name] = ModelConfig(
-            name=model_data.get("name", ""),
-            base_url=model_data.get("base_url", ""),
-            api_key=model_data.get("api_key", ""),
-            auth_token=model_data.get("auth_token", ""),
-            opus_model=model_data.get("opus_model", ""),
-            sonnet_model=model_data.get("sonnet_model", ""),
-            haiku_model=model_data.get("haiku_model", ""),
-        )
+        config.models[name] = ModelConfig(**model_data)
 
     _config_cache = config
     return config

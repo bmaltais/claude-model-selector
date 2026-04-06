@@ -97,8 +97,9 @@ def select_with_menu(model_names: list[str]) -> Optional[str]:
     click.echo("Available models:")
     click.echo("")
 
+    models = list_models()
     for i, name in enumerate(model_names, 1):
-        model = list_models()[name]
+        model = models[name]
         marker = " (active)" if model.name else ""
         click.echo(f"  {i}. {name}{marker}")
 
@@ -120,7 +121,7 @@ def select_with_menu(model_names: list[str]) -> Optional[str]:
             selected = model_names[choice - 1]
 
             if set_active(selected):
-                model = list_models()[selected]
+                model = models[selected]
                 click.echo(f"Activated model: {selected}")
                 if model and model.base_url:
                     click.echo(f"  Base URL: {model.base_url}")
