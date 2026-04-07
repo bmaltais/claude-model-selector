@@ -31,6 +31,16 @@ uv tool install --from . claude-model-selector
 pip install .
 ```
 
+> **Note:** After installing with `uv tool install` for the first time, the tool's bin directory is added to your PATH — but this change only takes effect in **new terminal sessions**. If `claude-model-selector` is not found immediately after installing, open a new terminal (or reload your shell profile) and try again.
+>
+> **Windows (PowerShell):** Open a new PowerShell or Command Prompt window.
+>
+> **macOS / Linux:** Open a new terminal, or run:
+> ```bash
+> source ~/.zshrc    # zsh (macOS default)
+> source ~/.bashrc   # bash
+> ```
+
 ## Quick Start
 
 ```bash
