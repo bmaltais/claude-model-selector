@@ -41,6 +41,22 @@ pip install .
 > source ~/.bashrc   # bash
 > ```
 
+### Updating
+
+```bash
+# Self-update via the CLI (requires uv)
+claude-model-selector update
+
+# Or manually:
+uv tool upgrade claude-model-selector
+```
+
+### Reinstalling from source
+
+```bash
+uv tool install --from . claude-model-selector --force
+```
+
 ## Quick Start
 
 ```bash
@@ -74,6 +90,7 @@ claude-model-selector select my-local
 | `run <name>` | Run claude-code with a specific model |
 | `shell-init` | Generate shell integration script |
 | `show-env <name>` | Show environment variables for a model |
+| `update` | Update to the latest version via uv |
 
 ### Adding Models
 

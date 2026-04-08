@@ -41,7 +41,7 @@ def interactive_add_fields(name, base_url, api_key, auth_token, opus_model, sonn
         local_suggestion = "http://localhost:8080"
 
         # Check for common cloud patterns in the name
-        name_lower = name.lower()
+        name_lower = name.lower() if name else ""
         if any(x in name_lower for x in ["azure", "cloud", "aws", "gcp", "openai"]):
             cloud_suggestion = "https://api.anthropic.com"
             local_suggestion = ""
@@ -176,12 +176,14 @@ def list_models_cmd():
 @click.option("-i", "--interactive", is_flag=True, help="Run interactive prompts for missing fields")
 def add(name, base_url, api_key, auth_token, opus_model, sonnet_model, haiku_model, description, interactive):
     """Add a new model configuration. Use -i for interactive prompts with sensible defaults."""
-    # Check if model already exists before prompting for other fields
-    if get_model(name):
-        click.echo(f"Model '{name}' already exists. Use 'edit' to modify it.")
-        return
-
     if interactive:
+        # Prompt for name first if not provided
+        if not name:
+            name = click.prompt("Model key/identifier (used in config)")
+        # Re-check existence after name is known
+        if get_model(name):
+            click.echo(f"Model '{name}' already exists. Use 'edit' to modify it.")
+            return
         base_url, api_key, auth_token, opus_model, sonnet_model, haiku_model, description = interactive_add_fields(
             name, base_url, api_key, auth_token, opus_model, sonnet_model, haiku_model, description
         )
@@ -190,6 +192,9 @@ def add(name, base_url, api_key, auth_token, opus_model, sonnet_model, haiku_mod
         if not name:
             click.echo("Error: Model name is required. Use 'add <name>' or 'add -i'.", err=True)
             sys.exit(1)
+        if get_model(name):
+            click.echo(f"Model '{name}' already exists. Use 'edit' to modify it.")
+            return
 
     model = ModelConfig(
         name=description if description is not None else name,
@@ -496,6 +501,25 @@ def show_env(name):
     click.echo("")
     for key, value in env_vars.items():
         click.echo(f"  {key}={value}")
+
+
+@main.command()
+def update():
+    """Update claude-model-selector to the latest version via uv."""
+    click.echo("Updating claude-model-selector...")
+    try:
+        result = subprocess.run(
+            ["uv", "tool", "upgrade", "claude-model-selector"],
+            check=True,
+        )
+        click.echo("Update complete.")
+    except FileNotFoundError:
+        click.echo("Error: 'uv' not found. Install uv or reinstall manually:", err=True)
+        click.echo("  uv tool install claude-model-selector", err=True)
+        sys.exit(1)
+    except subprocess.CalledProcessError as e:
+        click.echo(f"Update failed (exit code {e.returncode}).", err=True)
+        sys.exit(e.returncode)
 
 
 if __name__ == "__main__":
