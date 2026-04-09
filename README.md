@@ -16,7 +16,7 @@ Manage Claude Code model configurations and environment variables. Easily switch
 
 - **Switch models instantly** - Change between local development, staging, and production Claude endpoints
 - **Environment management** - Automatic export of required environment variables
-- **Interactive selection** - Use `fzf` for fuzzy search or numbered menus
+- **Interactive selection** - Arrow-key TUI menu for fast model switching
 - **Shell integration** - Seamless integration with your shell profile
 - **Editor support** - Edit configurations in your default text editor
 - **Configurable** - Supports custom config file paths
@@ -87,6 +87,7 @@ claude-model-selector select my-local
 | `select [name]` | Select model and run claude-code (interactive without name) |
 | `show` | Show the currently active model |
 | `export` | Output environment variables (for `export $(...)`) |
+| `claude [args...]` | Run claude with the active model, forwarding all args |
 | `run <name>` | Run claude-code with a specific model |
 | `shell-init` | Generate shell integration script |
 | `show-env <name>` | Show environment variables for a model |
@@ -127,12 +128,32 @@ claude-model-selector edit qwen3.5-35b --base-url http://new-url:8000
 # Select and run claude-code immediately
 claude-model-selector select qwen3.5-35b
 
-# Interactive selection (uses fzf if available)
+# Interactive arrow-key selection
 claude-model-selector select
 
 # Run with a specific model (without selecting)
 claude-model-selector run qwen3.5-35b
 ```
+
+### Running Claude with Arguments
+
+Use the `claude` subcommand to run claude with the active model's environment, forwarding any arguments directly:
+
+```bash
+# Run claude normally
+claude-model-selector claude
+
+# Pass a --result SHA to resume a session
+claude-model-selector claude --result abc123def
+
+# Resume the last session
+claude-model-selector claude --resume
+
+# Any other claude flags work too
+claude-model-selector claude --model claude-opus-4 --verbose
+```
+
+All arguments after `claude` are forwarded verbatim to the claude executable.
 
 ### Shell Integration
 
@@ -150,8 +171,17 @@ Now you can:
 ### Interactive Selection
 
 Run `claude-model-selector select` without arguments for interactive mode:
-- Uses **fzf** if available for fuzzy search
-- Falls back to numbered menu otherwise
+
+```
+? Select a model:
+ ❯ anthropic   (Production — https://api.anthropic.com)
+   local-llm   (Local Dev — http://localhost:8000)
+   openrouter  (OpenRouter — https://openrouter.ai/api/v1)
+```
+
+- `↑` / `↓` arrow keys to move, **Enter** to confirm, **Ctrl-C** to cancel
+- The currently active model is pre-highlighted
+- No external tools required — works out of the box on all platforms
 
 ## Configuration
 

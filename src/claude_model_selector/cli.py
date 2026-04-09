@@ -153,15 +153,23 @@ def list_models_cmd():
         click.echo("No models configured. Use 'add' to create one.")
         return
 
-    click.echo(f"{'Name':<20} {'Name/Description':<30} {'Active'}")
-    click.echo("-" * 60)
-
     # active is a ModelConfig object, we need the config to get the active name
     config = load_config()
+
+    rows = []
     for name, model in sorted(models.items()):
         display_name = model.name or name
-        active_marker = " <- ACTIVE" if name == config.active else ""
-        click.echo(f"{name:<20} {display_name:<30}{active_marker}")
+        active_marker = "<- ACTIVE" if name == config.active else ""
+        rows.append((name, display_name, active_marker))
+
+    col1 = max(len("Name"), max(len(r[0]) for r in rows))
+    col2 = max(len("Name/Description"), max(len(r[1]) for r in rows))
+    sep = col1 + col2 + 3 + len("<- ACTIVE")
+
+    click.echo(f"{'Name':<{col1}}  {'Name/Description':<{col2}}  Active")
+    click.echo("-" * sep)
+    for name, display_name, active_marker in rows:
+        click.echo(f"{name:<{col1}}  {display_name:<{col2}}  {active_marker}")
 
 
 @main.command()
@@ -418,7 +426,7 @@ def _find_claude_exe() -> Optional[str]:
     return shutil.which("claude-code") or shutil.which("claude") or shutil.which("Claude")
 
 
-def run_claude(model: ModelConfig) -> None:
+def run_claude(model: ModelConfig, extra_args: tuple = ()) -> None:
     """Run claude-code with a model's environment."""
     claude_exe = _find_claude_exe()
 
@@ -433,12 +441,26 @@ def run_claude(model: ModelConfig) -> None:
         )
         sys.exit(1)
 
-    _run_with_env(model, [claude_exe])
+    _run_with_env(model, [claude_exe, *extra_args])
 
 
 def run_command(model: ModelConfig, command: list[str]) -> None:
     """Run an arbitrary command with a model's environment."""
     _run_with_env(model, command)
+
+
+@main.command(
+    name="claude",
+    context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
+)
+@click.argument("args", nargs=-1, type=click.UNPROCESSED)
+def claude_cmd(args):
+    """Run claude with the active model's environment, forwarding all arguments."""
+    model = get_active_model()
+    if not model:
+        click.echo("Error: No active model configured. Use 'select <name>' to choose one first.", err=True)
+        sys.exit(1)
+    run_claude(model, extra_args=args)
 
 
 @main.command()
